@@ -215,7 +215,7 @@ export default function Home() {
         >
           <Hexagon className="w-8 h-8 text-primary group-hover:-rotate-12 transition-transform drop-shadow" />
           <div className="flex flex-col">
-            <span className="font-bold text-lg tracking-tight leading-none">JhonNative</span>
+            <span className="font-bold text-lg tracking-tight leading-none">ScrapeNative</span>
             <span className="text-[10px] uppercase font-bold tracking-widest text-[#FF895D]">Pro</span>
           </div>
         </div>
@@ -385,7 +385,7 @@ export default function Home() {
                           Processing Wrap...
                         </>
                       ) : (
-                        "Get JhonNative Bundle"
+                        "Get ScrapeNative Bundle"
                       )}
                     </button>
                   )}
