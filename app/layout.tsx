@@ -8,8 +8,8 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: 'Web2Native - SANN404 FORUM',
-  description: 'Convert your website into a native Android and iOS application easily. Developed by SANN404 FORUM.',
+  title: 'Web2Native - JHON FORUM',
+  description: 'Convert your website into a native Android and iOS application easily. Developed by JHON FORUM.',
 };
 
 export default function RootLayout({children}: {children: React.ReactNode}) {
