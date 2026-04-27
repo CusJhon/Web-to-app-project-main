@@ -1,8 +1,31 @@
+// app/page.tsx (LENGKAP dengan semua fungsionalitas original + Cyberpunk Theme)
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Download, Loader2, Globe, AlertCircle, CheckCircle2, History, Trash2, LayoutTemplate, Layers, Cpu, Code, Hexagon } from 'lucide-react';
+import { 
+  Download, 
+  Loader2, 
+  Globe, 
+  AlertCircle, 
+  CheckCircle2, 
+  History, 
+  Trash2, 
+  LayoutTemplate, 
+  Layers, 
+  Cpu, 
+  Code, 
+  Hexagon,
+  Zap,
+  Activity,
+  Terminal,
+  Shield,
+  Network,
+  Eye,
+  Maximize2
+} from 'lucide-react';
+import MatrixBackground from '@/components/MatrixBackground';
+import Sidebar from '@/components/Sidebar';
 
 interface HistoryItem {
   id: string;
@@ -15,6 +38,7 @@ interface HistoryItem {
 }
 
 export default function Home() {
+  // Original state
   const [appName, setAppName] = useState('');
   const [websiteUrl, setWebsiteUrl] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -22,17 +46,25 @@ export default function Home() {
   const [requestId, setRequestId] = useState<string | null>(null);
   const [buildStatus, setBuildStatus] = useState<any>(null);
   const [isDone, setIsDone] = useState(false);
-  
-  // History state
+  const [showSplash, setShowSplash] = useState(true);
   const [history, setHistory] = useState<HistoryItem[]>([]);
   const [showHistory, setShowHistory] = useState(false);
+  const [activeView, setActiveView] = useState('builder'); // 'builder', 'monitor', 'logs', 'system'
+  const videoRef = useRef<HTMLVideoElement>(null);
 
+  // Splash screen effect
   useEffect(() => {
-    // Load history from local storage
+    const timer = setTimeout(() => {
+      setShowSplash(false);
+    }, 6000);
+    return () => clearTimeout(timer);
+  }, []);
+
+  // Load history from localStorage
+  useEffect(() => {
     const saved = localStorage.getItem('web2native_history');
     if (saved) {
       try {
-        // eslint-disable-next-line react-hooks/set-state-in-effect
         setHistory(JSON.parse(saved));
       } catch (e) {
         console.error('Failed to parse history', e);
@@ -66,7 +98,6 @@ export default function Home() {
       return;
     }
     
-    // Ensure URL starts with http:// or https://
     let formattedUrl = websiteUrl.trim();
     if (!/^https?:\/\//i.test(formattedUrl)) {
       formattedUrl = 'https://' + formattedUrl;
@@ -96,7 +127,6 @@ export default function Home() {
       const newId = result.data.requestId;
       setRequestId(newId);
       
-      // Save initial history
       const newItem: HistoryItem = {
         id: newId,
         appName,
@@ -124,15 +154,12 @@ export default function Home() {
 
         if (response.ok && result.success) {
           const data = result.data;
-          
           setBuildStatus(data);
 
           if (data.isDone) {
             setIsDone(true);
             setIsLoading(false);
             clearInterval(interval);
-            
-            // Update history
             updateHistoryItem(requestId, {
               status: 'DONE',
               androidUrl: data.android_url,
@@ -146,7 +173,6 @@ export default function Home() {
     };
 
     if (requestId && !isDone) {
-      // Check immediately, then every 5 seconds
       checkStatus();
       interval = setInterval(checkStatus, 5000);
     }
@@ -156,340 +182,566 @@ export default function Home() {
     };
   }, [requestId, isDone]);
 
-  // View renderer
+  // Sidebar navigation items for cyberpunk theme
+  const navItems = [
+    { id: 'builder', label: 'BUILDER', icon: Zap },
+    { id: 'monitor', label: 'MONITOR', icon: Activity },
+    { id: 'logs', label: 'LOGS', icon: Terminal },
+    { id: 'system', label: 'SYSTEM', icon: Shield },
+  ];
+
   return (
-    <div className="min-h-screen bg-background text-foreground font-sans p-4 md:p-8 flex flex-col items-center">
-      
-      <header className="w-full max-w-xl mx-auto flex justify-between items-center mb-12 mt-4 px-2">
-        <div 
-          className="flex items-center gap-3 cursor-pointer group" 
-          onClick={() => setShowHistory(false)}
-        >
-          <Hexagon className="w-8 h-8 text-primary group-hover:-rotate-12 transition-transform drop-shadow" />
-          <div className="flex flex-col">
-            <span className="font-bold text-lg tracking-tight leading-none">JhonNative</span>
-            <span className="text-[10px] uppercase font-bold tracking-widest text-[#FF895D]">Pro</span>
-          </div>
-        </div>
+    <>
+      {/* Splash Screen Loading Overlay - Original */}
+      <AnimatePresence>
+        {showSplash && (
+          <motion.div
+            initial={{ opacity: 1 }}
+            exit={{ opacity: 0, visibility: 'hidden' }}
+            transition={{ duration: 0.5 }}
+            className="fixed inset-0 z-[9999] bg-black/90 flex items-center justify-center"
+            style={{ backdropFilter: 'blur(10px)' }}
+          >
+            <div className="text-center">
+              <video
+                ref={videoRef}
+                autoPlay
+                muted
+                loop
+                playsInline
+                className="w-32 h-32 object-cover rounded-2xl shadow-[0_0_30px_rgba(0,255,255,0.5)] mx-auto mb-6"
+              >
+                <source src="https://i.imgur.com/NRDIp63.mp4" type="video/mp4" />
+              </video>
+              <div className="text-neon-cyan font-mono text-sm animate-pulse">INITIALIZING NEXUS...</div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Main Content with Cyberpunk Theme */}
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: showSplash ? 0 : 1 }}
+        transition={{ duration: 0.5, delay: showSplash ? 0 : 0.3 }}
+        className="relative min-h-screen bg-black overflow-hidden"
+      >
+        <MatrixBackground />
         
-        <button 
-           onClick={() => setShowHistory(!showHistory)}
-           className="p-2 rounded-full hover:bg-surface transition-colors relative"
-           aria-label="History">
-           <History className="w-5 h-5 text-primary" />
-        </button>
-      </header>
-
-      <main className="flex-1 w-full max-w-xl mx-auto flex flex-col gap-8 pb-12 px-2">
-        
-        <AnimatePresence mode="wait">
-          {showHistory ? (
-            <motion.div 
-              key="history"
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.98 }}
-              className="flex flex-col gap-6"
-            >
-              <div className="flex justify-between items-center px-2">
-                <h2 className="text-2xl font-bold tracking-tight">Recent Builds</h2>
-                {history.length > 0 && (
-                  <button 
-                    onClick={clearHistory}
-                    className="text-xs font-semibold text-red-500 hover:text-red-700 bg-[#FFF5F5] px-3 py-1.5 rounded-full transition-colors"
-                  >
-                    Clear History
-                  </button>
-                )}
-              </div>
-
-              {history.length === 0 ? (
-                <div className="bg-surface rounded-[24px] p-8 text-center text-gray-500 flex flex-col items-center shadow-sm">
-                  <History className="w-8 h-8 mb-4 opacity-50" />
-                  <p className="font-medium text-sm">No recent apps compiled yet.</p>
+        <div className="relative z-10 flex h-screen">
+          {/* Cyberpunk Sidebar */}
+          <div className="w-72 bg-black/60 backdrop-blur-md border-r border-neon-cyan/30 flex flex-col">
+            <div className="p-6 border-b border-neon-cyan/20">
+              <div className="flex items-center gap-3 mb-2">
+                <Hexagon className="w-8 h-8 text-neon-cyan animate-pulse" />
+                <div>
+                  <h1 className="text-xl font-mono font-bold text-neon-cyan">JhonNative</h1>
+                  <p className="text-xs font-mono text-gray-500">PRO // v2.0</p>
                 </div>
-              ) : (
-                <div className="flex flex-col gap-3">
-                  {history.map((item) => (
-                    <div key={item.id} className="bg-surface shadow-[0_4px_24px_rgba(0,0,0,0.02)] rounded-[20px] p-5 flex flex-col gap-4">
-                      <div className="flex justify-between items-start">
-                        <div>
-                          <h3 className="font-bold text-lg leading-tight">{item.appName}</h3>
-                          <p className="text-xs text-gray-500 mt-1 flex items-center gap-1">
-                            <Globe className="w-3 h-3" />
-                            {item.websiteUrl}
-                          </p>
-                        </div>
-                        <span className={`text-[10px] px-2 py-1 rounded-md font-bold uppercase tracking-wider shadow-sm ${item.status === 'DONE' ? 'bg-[#E5F5EC] text-[#148348]' : 'bg-[#FFEGE5] text-[#FF895D] animate-pulse'}`}>
-                          {item.status}
-                        </span>
-                      </div>
-                      
-                      <div className="flex gap-2 mt-2">
-                        {item.status === 'DONE' ? (
-                          <>
-                            {item.androidUrl && (
-                              <a href={item.androidUrl} target="_blank" rel="noreferrer" className="flex-1 bg-white hover:bg-gray-50 text-primary border border-border shadow-sm px-4 py-2.5 rounded-full text-xs font-bold transition-all text-center flex items-center justify-center gap-2">
-                                <Download className="w-4 h-4" /> Android
-                              </a>
-                            )}
-                            {item.iosUrl && (
-                              <a href={item.iosUrl} target="_blank" rel="noreferrer" className="flex-1 bg-white hover:bg-gray-50 text-primary border border-border shadow-sm px-4 py-2.5 rounded-full text-xs font-bold transition-all text-center flex items-center justify-center gap-2">
-                                <Download className="w-4 h-4" /> iOS
-                              </a>
-                            )}
-                          </>
-                        ) : (
-                          <div className="w-full bg-white shadow-sm px-4 py-2.5 rounded-full text-xs font-semibold text-gray-500 text-center flex items-center justify-center gap-2 border border-border">
-                            <Loader2 className="w-3.5 h-3.5 animate-spin" /> Compiling Platform Packages...
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </motion.div>
-          ) : (
-            <motion.div 
-              key="builder"
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.98 }}
-              className="flex flex-col gap-10"
-            >
-              <div className="px-2 text-center">
-                <h1 className="text-3xl md:text-4xl font-bold tracking-tight mb-4 leading-tight">
-                  Unlock native mobile<br/>experiences
-                </h1>
-                <p className="text-sm text-gray-600 font-medium max-w-sm mx-auto">
-                  Easily wrap any responsive website into powerful Android & iOS applications seamlessly. Zero coding.
-                </p>
               </div>
-
-              {/* Form Section */}
-              <div className="bg-surface rounded-3xl p-3 pb-0 overflow-hidden shadow-[0_8px_30px_rgba(0,0,0,0.03)] border border-border">
-                <form onSubmit={handleSubmit} className="flex flex-col gap-4 p-4">
-                  <div className="flex flex-col gap-1.5">
-                    <label htmlFor="appName" className="text-xs font-bold text-gray-500 px-1">App Name</label>
-                    <input
-                      id="appName"
-                      type="text"
-                      placeholder="My Premium App"
-                      value={appName}
-                      onChange={(e) => setAppName(e.target.value)}
-                      disabled={isLoading || isDone || !!requestId}
-                      className="w-full bg-background rounded-2xl px-5 py-4 text-base font-semibold focus:outline-none focus:ring-1 focus:ring-primary shadow-inner transition-all disabled:opacity-60 disabled:bg-gray-100 placeholder:font-normal placeholder:text-gray-400"
-                    />
-                  </div>
-
-                  <div className="flex flex-col gap-1.5">
-                    <label htmlFor="websiteUrl" className="text-xs font-bold text-gray-500 px-1">Website URL</label>
-                    <div className="relative">
-                      <Globe className="absolute left-5 top-[18px] w-5 h-5 text-gray-400" />
-                      <input
-                        id="websiteUrl"
-                        type="text"
-                        placeholder="example.com"
-                        value={websiteUrl}
-                        onChange={(e) => setWebsiteUrl(e.target.value)}
-                        disabled={isLoading || isDone || !!requestId}
-                        className="w-full bg-background rounded-2xl pl-12 pr-5 py-4 text-base font-semibold focus:outline-none focus:ring-1 focus:ring-primary shadow-inner transition-all disabled:opacity-60 disabled:bg-gray-100 placeholder:font-normal placeholder:text-gray-400"
-                      />
-                    </div>
-                  </div>
-
-                  {error && (
-                    <motion.div 
-                      initial={{ opacity: 0, height: 0 }}
-                      animate={{ opacity: 1, height: 'auto' }}
-                      className="flex items-start gap-2 text-red-600 bg-[#FFF5F5] border border-red-100 p-3 rounded-2xl text-xs font-medium mt-1"
+              <div className="mt-4 flex items-center gap-2">
+                <div className="w-1.5 h-1.5 rounded-full bg-neon-green animate-pulse"></div>
+                <span className="text-xs font-mono text-neon-green">API: ACTIVE</span>
+              </div>
+            </div>
+            
+            <div className="flex-1 py-8">
+              <div className="px-4 mb-4">
+                <div className="text-[10px] font-mono text-gray-500 tracking-wider">CONTROL PANEL</div>
+                <div className="h-px bg-gradient-to-r from-neon-cyan/50 to-transparent mt-1"></div>
+              </div>
+              
+              <nav className="space-y-2 px-4">
+                {navItems.map((item) => {
+                  const isActive = activeView === item.id;
+                  const Icon = item.icon;
+                  
+                  return (
+                    <motion.button
+                      key={item.id}
+                      onClick={() => {
+                        setActiveView(item.id);
+                        if (item.id !== 'builder') setShowHistory(false);
+                      }}
+                      className={`relative w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-300 group ${
+                        isActive 
+                          ? 'bg-neon-cyan/10 border border-neon-cyan/50 shadow-glow' 
+                          : 'hover:bg-white/5 border border-transparent'
+                      }`}
+                      whileHover={{ x: 4 }}
+                      whileTap={{ scale: 0.98 }}
                     >
-                      <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
-                      <p>{error}</p>
-                    </motion.div>
-                  )}
-                </form>
-
-                <div className="bg-background/80 p-6 pt-5 mt-2 rounded-t-[2.5rem]">
-                   {!requestId && !isDone && (
-                    <button
-                      onClick={handleSubmit}
-                      disabled={isLoading}
-                      className="w-full bg-primary hover:bg-primary-hover text-white font-bold py-4 rounded-full flex items-center justify-center gap-2 transition-transform active:scale-[0.98] disabled:opacity-80 disabled:cursor-not-allowed shadow-[0_8px_20px_rgba(0,0,0,0.15)] text-[15px]"
-                    >
-                      {isLoading ? (
-                        <>
-                          <Loader2 className="w-5 h-5 animate-spin" />
-                          Processing Wrap...
-                        </>
-                      ) : (
-                        "Get JhonNative Bundle"
+                      {isActive && (
+                        <motion.div
+                          layoutId="activeTab"
+                          className="absolute left-0 w-1 h-full bg-neon-cyan rounded-r"
+                          initial={{ opacity: 0 }}
+                          animate={{ opacity: 1 }}
+                          transition={{ type: "spring", stiffness: 500, damping: 30 }}
+                        />
                       )}
-                    </button>
-                  )}
+                      
+                      <Icon className={`w-4 h-4 transition-colors ${isActive ? 'text-neon-cyan' : 'text-gray-500 group-hover:text-neon-cyan'}`} />
+                      
+                      <span className={`text-sm font-mono font-bold transition-colors ${
+                        isActive ? 'text-neon-cyan' : 'text-gray-400 group-hover:text-neon-cyan'
+                      }`}>
+                        {item.label}
+                      </span>
+                      
+                      {isActive && (
+                        <motion.div
+                          className="absolute right-3 w-1 h-1 rounded-full bg-neon-cyan"
+                          animate={{ scale: [1, 1.5, 1] }}
+                          transition={{ duration: 2, repeat: Infinity }}
+                        />
+                      )}
+                    </motion.button>
+                  );
+                })}
+              </nav>
+              
+              <div className="px-4 mt-8">
+                <div className="text-[10px] font-mono text-gray-500 tracking-wider">SYSTEM NODES</div>
+                <div className="h-px bg-gradient-to-r from-neon-cyan/50 to-transparent mt-1"></div>
+              </div>
+              
+              <div className="mt-4 px-4 space-y-2">
+                <div className="flex items-center gap-2 px-4 py-2 rounded-lg border border-neon-cyan/20 bg-black/40">
+                  <Cpu className="w-3 h-3 text-neon-cyan" />
+                  <span className="text-xs font-mono text-neon-cyan">BUILD_NODE: ONLINE</span>
+                </div>
+                <div className="flex items-center gap-2 px-4 py-2 rounded-lg border border-neon-cyan/20 bg-black/40">
+                  <Network className="w-3 h-3 text-neon-green" />
+                  <span className="text-xs font-mono text-neon-green">API_GATEWAY: ACTIVE</span>
+                </div>
+              </div>
+            </div>
+            
+            <div className="p-6 border-t border-neon-cyan/20">
+              <div className="flex items-center gap-2 mb-2">
+                <div className="w-2 h-2 rounded-full bg-neon-green"></div>
+                <div className="text-[10px] font-mono text-neon-green">WEB2NATIVE STATUS</div>
+              </div>
+              <div className="text-xs font-mono text-gray-500">
+                <div>READY TO BUILD</div>
+                <div>API: CONNECTED</div>
+              </div>
+            </div>
+          </div>
+          
+          {/* Main Content Area */}
+          <main className="flex-1 flex flex-col overflow-hidden">
+            {/* Top Bar */}
+            <div className="h-14 border-b border-neon-cyan/20 bg-black/40 backdrop-blur-sm flex items-center justify-between px-6">
+              <div className="flex items-center gap-3">
+                <div className="flex items-center gap-2">
+                  <div className="w-2 h-2 rounded-full bg-neon-red animate-pulse"></div>
+                  <span className="text-xs font-mono text-neon-red">REC</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="w-2 h-2 rounded-full bg-neon-green"></div>
+                  <span className="text-xs font-mono text-neon-green">API ONLINE</span>
+                </div>
+                <div className="h-4 w-px bg-neon-cyan/30 mx-2"></div>
+                <div className="flex items-center gap-2 text-xs font-mono text-neon-cyan">
+                  <Cpu className="w-3 h-3" />
+                  <span>BUILD ENGINE: STANDBY</span>
+                </div>
+              </div>
+              
+              <div className="flex items-center gap-4">
+                <button 
+                  onClick={() => setShowHistory(!showHistory)}
+                  className="p-2 rounded-lg hover:bg-neon-cyan/10 transition-colors relative group"
+                >
+                  <History className="w-4 h-4 text-gray-400 group-hover:text-neon-cyan transition-colors" />
+                </button>
+                <span className="text-xs font-mono text-gray-500">UPTIME: 23:59:42</span>
+                <span className="text-neon-cyan animate-pulse">&gt;_</span>
+              </div>
+            </div>
+            
+            {/* Content Panel */}
+            <div className="flex-1 overflow-auto p-6">
+              <AnimatePresence mode="wait">
+                {showHistory ? (
+                  <motion.div 
+                    key="history"
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, scale: 0.98 }}
+                    className="bg-black/60 backdrop-blur-sm border border-neon-cyan/30 rounded-lg p-6"
+                  >
+                    <div className="flex justify-between items-center mb-6">
+                      <div className="flex items-center gap-2">
+                        <History className="w-5 h-5 text-neon-cyan" />
+                        <h2 className="text-xl font-mono font-bold text-neon-cyan">BUILD HISTORY</h2>
+                      </div>
+                      {history.length > 0 && (
+                        <button 
+                          onClick={clearHistory}
+                          className="text-xs font-mono text-neon-red hover:text-neon-red/80 border border-neon-red/30 px-3 py-1.5 rounded-lg transition-colors hover:shadow-glow"
+                        >
+                          CLEAR ALL
+                        </button>
+                      )}
+                    </div>
 
-                  <AnimatePresence>
-                    {(requestId || isLoading || isDone) && (
-                      <motion.div 
-                        initial={{ opacity: 0, height: 0 }}
-                        animate={{ opacity: 1, height: 'auto' }}
-                        className="flex flex-col gap-4 overflow-hidden"
-                      >
-                         <div className="flex items-center justify-between bg-primary text-white p-5 rounded-[24px] shadow-lg mt-2">
-                            <div className="flex flex-col">
-                              <span className="text-[10px] text-gray-400 font-bold uppercase tracking-wider mb-0.5">Status</span>
-                              <span className="text-[15px] font-bold flex items-center gap-2">
-                                {isDone ? (
-                                  <><CheckCircle2 className="w-4 h-4 text-[#FF895D]" /> Build Completed</>
-                                ) : (
-                                  <><Loader2 className="w-4 h-4 animate-spin text-[#FF895D]" /> Compiling systems</>
-                                )}
+                    {history.length === 0 ? (
+                      <div className="border border-neon-cyan/20 rounded-lg p-12 text-center">
+                        <History className="w-12 h-12 text-gray-600 mx-auto mb-4" />
+                        <p className="font-mono text-sm text-gray-500">No build history found.</p>
+                        <p className="font-mono text-xs text-gray-600 mt-2">Start a new build to see results here.</p>
+                      </div>
+                    ) : (
+                      <div className="space-y-3">
+                        {history.map((item) => (
+                          <div key={item.id} className="border border-neon-cyan/20 rounded-lg p-4 hover:border-neon-cyan/50 transition-all">
+                            <div className="flex justify-between items-start mb-3">
+                              <div>
+                                <h3 className="font-mono font-bold text-neon-cyan">{item.appName}</h3>
+                                <p className="text-xs font-mono text-gray-500 mt-1 flex items-center gap-1">
+                                  <Globe className="w-3 h-3" />
+                                  {item.websiteUrl}
+                                </p>
+                              </div>
+                              <span className={`text-[10px] font-mono px-2 py-1 rounded-md font-bold uppercase tracking-wider ${
+                                item.status === 'DONE' 
+                                  ? 'bg-neon-green/20 text-neon-green border border-neon-green/30' 
+                                  : 'bg-neon-cyan/20 text-neon-cyan border border-neon-cyan/30 animate-pulse'
+                              }`}>
+                                {item.status}
                               </span>
                             </div>
-                            {!isDone && (
-                               <div className="text-right">
-                                  <span className="text-[10px] text-gray-400 font-bold uppercase tracking-wider block mb-0.5">ETA</span>
-                                  <span className="text-[15px] font-semibold">~2 mins</span>
-                               </div>
-                            )}
-                         </div>
+                            
+                            <div className="flex gap-2 mt-3">
+                              {item.status === 'DONE' ? (
+                                <>
+                                  {item.androidUrl && (
+                                    <a href={item.androidUrl} target="_blank" rel="noreferrer" className="flex-1 bg-neon-cyan/10 hover:bg-neon-cyan/20 border border-neon-cyan/30 text-neon-cyan px-4 py-2 rounded-lg text-xs font-mono font-bold transition-all text-center">
+                                      DOWNLOAD APK
+                                    </a>
+                                  )}
+                                  {item.iosUrl && (
+                                    <a href={item.iosUrl} target="_blank" rel="noreferrer" className="flex-1 bg-neon-cyan/10 hover:bg-neon-cyan/20 border border-neon-cyan/30 text-neon-cyan px-4 py-2 rounded-lg text-xs font-mono font-bold transition-all text-center">
+                                      DOWNLOAD IPA
+                                    </a>
+                                  )}
+                                </>
+                              ) : (
+                                <div className="w-full bg-black/60 border border-neon-cyan/30 px-4 py-2 rounded-lg text-xs font-mono text-neon-cyan text-center flex items-center justify-center gap-2">
+                                  <Loader2 className="w-3.5 h-3.5 animate-spin" /> PROCESSING...
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </motion.div>
+                ) : (
+                  <motion.div 
+                    key={activeView}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, scale: 0.98 }}
+                    className="space-y-6"
+                  >
+                    {activeView === 'builder' && (
+                      <>
+                        {/* Hero Section */}
+                        <div className="text-center mb-8">
+                          <h1 className="text-4xl font-mono font-bold text-neon-cyan mb-3 tracking-tight">
+                            Web2Native Builder
+                          </h1>
+                          <p className="text-sm font-mono text-gray-400 max-w-md mx-auto">
+                            Transform any website into native Android & iOS applications instantly.
+                          </p>
+                        </div>
 
-                         {buildStatus && (
-                            <div className="flex flex-col gap-3 mt-3 bg-surface p-4 rounded-2xl shadow-inner border border-border">
-                              <div className="flex justify-between items-center text-xs font-semibold px-2">
-                                <span className="text-gray-500">Android Generation</span>
-                                <span className={buildStatus.android_status === 'DONE' ? 'text-[#148348]' : 'text-[#FF895D]'}>{buildStatus.android_status || 'WAITING'}</span>
+                        {/* Main Build Form */}
+                        <div className="bg-black/60 backdrop-blur-sm border border-neon-cyan/30 rounded-lg overflow-hidden">
+                          <div className="p-6">
+                            <form onSubmit={handleSubmit} className="space-y-5">
+                              <div>
+                                <label htmlFor="appName" className="block text-xs font-mono text-neon-cyan mb-2">APP IDENTIFIER</label>
+                                <input
+                                  id="appName"
+                                  type="text"
+                                  placeholder="MyApp"
+                                  value={appName}
+                                  onChange={(e) => setAppName(e.target.value)}
+                                  disabled={isLoading || isDone || !!requestId}
+                                  className="w-full bg-black/80 border border-neon-cyan/30 rounded-lg px-4 py-3 text-sm font-mono text-neon-cyan focus:outline-none focus:border-neon-cyan focus:shadow-glow transition-all disabled:opacity-50 placeholder:text-gray-600"
+                                />
                               </div>
-                              <div className="h-px w-full bg-border" />
-                              <div className="flex justify-between items-center text-xs font-semibold px-2">
-                                <span className="text-gray-500">iOS Generation</span>
-                                <span className={buildStatus.ios_status === 'DONE' ? 'text-[#148348]' : 'text-[#FF895D]'}>{buildStatus.ios_status || 'WAITING'}</span>
+
+                              <div>
+                                <label htmlFor="websiteUrl" className="block text-xs font-mono text-neon-cyan mb-2">TARGET URL</label>
+                                <div className="relative">
+                                  <Globe className="absolute left-3 top-3 w-4 h-4 text-gray-500" />
+                                  <input
+                                    id="websiteUrl"
+                                    type="text"
+                                    placeholder="https://example.com"
+                                    value={websiteUrl}
+                                    onChange={(e) => setWebsiteUrl(e.target.value)}
+                                    disabled={isLoading || isDone || !!requestId}
+                                    className="w-full bg-black/80 border border-neon-cyan/30 rounded-lg pl-10 pr-4 py-3 text-sm font-mono text-neon-cyan focus:outline-none focus:border-neon-cyan focus:shadow-glow transition-all disabled:opacity-50 placeholder:text-gray-600"
+                                  />
+                                </div>
+                              </div>
+
+                              {error && (
+                                <motion.div 
+                                  initial={{ opacity: 0, height: 0 }}
+                                  animate={{ opacity: 1, height: 'auto' }}
+                                  className="flex items-start gap-2 text-neon-red bg-neon-red/10 border border-neon-red/30 p-3 rounded-lg text-xs font-mono"
+                                >
+                                  <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
+                                  <p>{error}</p>
+                                </motion.div>
+                              )}
+
+                              {!requestId && !isDone && (
+                                <button
+                                  type="submit"
+                                  disabled={isLoading}
+                                  className="w-full bg-neon-cyan/20 hover:bg-neon-cyan/30 border border-neon-cyan text-neon-cyan font-mono font-bold py-3 rounded-lg flex items-center justify-center gap-2 transition-all hover:shadow-glow disabled:opacity-50"
+                                >
+                                  {isLoading ? (
+                                    <>
+                                      <Loader2 className="w-4 h-4 animate-spin" />
+                                      INITIATING BUILD...
+                                    </>
+                                  ) : (
+                                    "DEPLOY TO NATIVE"
+                                  )}
+                                </button>
+                              )}
+
+                              <AnimatePresence>
+                                {(requestId || isLoading || isDone) && (
+                                  <motion.div 
+                                    initial={{ opacity: 0, height: 0 }}
+                                    animate={{ opacity: 1, height: 'auto' }}
+                                    className="space-y-4 overflow-hidden"
+                                  >
+                                    <div className="border border-neon-cyan/30 rounded-lg p-4 bg-black/40">
+                                      <div className="flex justify-between items-center mb-3">
+                                        <span className="text-xs font-mono text-gray-400">BUILD STATUS</span>
+                                        <span className="text-xs font-mono text-neon-cyan flex items-center gap-2">
+                                          {isDone ? (
+                                            <><CheckCircle2 className="w-3 h-3 text-neon-green" /> COMPLETE</>
+                                          ) : (
+                                            <><Loader2 className="w-3 h-3 animate-spin" /> PROCESSING</>
+                                          )}
+                                        </span>
+                                      </div>
+                                      
+                                      {buildStatus && (
+                                        <div className="space-y-2">
+                                          <div className="flex justify-between text-xs font-mono">
+                                            <span className="text-gray-500">ANDROID</span>
+                                            <span className={buildStatus.android_status === 'DONE' ? 'text-neon-green' : 'text-neon-cyan'}>
+                                              {buildStatus.android_status || 'PENDING'}
+                                            </span>
+                                          </div>
+                                          <div className="flex justify-between text-xs font-mono">
+                                            <span className="text-gray-500">IOS</span>
+                                            <span className={buildStatus.ios_status === 'DONE' ? 'text-neon-green' : 'text-neon-cyan'}>
+                                              {buildStatus.ios_status || 'PENDING'}
+                                            </span>
+                                          </div>
+                                        </div>
+                                      )}
+                                    </div>
+
+                                    {isDone && buildStatus && (
+                                      <motion.div 
+                                        initial={{ opacity: 0, y: 5 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        className="space-y-3"
+                                      >
+                                        {buildStatus.android_url && (
+                                          <a 
+                                            href={buildStatus.android_url}
+                                            target="_blank"
+                                            rel="noreferrer"
+                                            className="w-full bg-neon-cyan/20 hover:bg-neon-cyan/30 border border-neon-cyan text-neon-cyan py-3 rounded-lg flex items-center justify-center gap-2 transition-all font-mono text-sm hover:shadow-glow"
+                                          >
+                                            <Download className="w-4 h-4" /> DOWNLOAD ANDROID APK
+                                          </a>
+                                        )}
+                                        {buildStatus.ios_url && (
+                                          <a 
+                                            href={buildStatus.ios_url}
+                                            target="_blank"
+                                            rel="noreferrer"
+                                            className="w-full bg-white/10 hover:bg-white/20 border border-white/30 text-white py-3 rounded-lg flex items-center justify-center gap-2 transition-all font-mono text-sm"
+                                          >
+                                            <Download className="w-4 h-4" /> DOWNLOAD IOS IPA
+                                          </a>
+                                        )}
+
+                                        <button 
+                                          onClick={() => {
+                                            setIsDone(false);
+                                            setBuildStatus(null);
+                                            setRequestId(null);
+                                            setAppName('');
+                                            setWebsiteUrl('');
+                                          }}
+                                          className="mt-4 text-xs font-mono text-gray-500 hover:text-neon-cyan transition-colors text-center w-full"
+                                        >
+                                          NEW BUILD SEQUENCE
+                                        </button>
+                                      </motion.div>
+                                    )}
+                                  </motion.div>
+                                )}
+                              </AnimatePresence>
+                            </form>
+                          </div>
+                        </div>
+
+                        {/* Documentation Section */}
+                        <div className="bg-black/60 backdrop-blur-sm border border-neon-cyan/30 rounded-lg p-6">
+                          <h3 className="text-lg font-mono font-bold text-neon-cyan mb-6 flex items-center justify-center gap-2">
+                            <LayoutTemplate className="w-4 h-4" /> BUILD PROCESS
+                          </h3>
+                          
+                          <div className="space-y-4">
+                            <div className="flex gap-4 items-start">
+                              <div className="w-8 h-8 rounded-lg border border-neon-cyan/30 flex items-center justify-center shrink-0">
+                                <Code className="w-4 h-4 text-neon-cyan" />
+                              </div>
+                              <div className="flex-1">
+                                <h4 className="text-sm font-mono font-bold text-neon-cyan">1. CONFIGURE</h4>
+                                <p className="text-xs font-mono text-gray-400 mt-1">Enter your app name and website URL to begin the wrapping process.</p>
                               </div>
                             </div>
-                         )}
 
-                         {isDone && buildStatus && (
-                            <motion.div 
-                              initial={{ opacity: 0, y: 5 }}
-                              animate={{ opacity: 1, y: 0 }}
-                              className="flex flex-col gap-3 mt-4"
-                            >
-                               {buildStatus.android_url && (
-                                <a 
-                                  href={buildStatus.android_url}
-                                  target="_blank"
-                                  rel="noreferrer"
-                                  className="w-full bg-[#FF895D] hover:bg-[#ff7a45] text-white py-4 rounded-full flex items-center justify-center gap-2 transition-all font-bold text-[15px] shadow-[0_8px_20px_rgba(255,137,93,0.3)]"
-                                >
-                                  <Download className="w-5 h-5" /> Download Android APK
-                                </a>
-                               )}
-                               {buildStatus.ios_url && (
-                                <a 
-                                  href={buildStatus.ios_url}
-                                  target="_blank"
-                                  rel="noreferrer"
-                                  className="w-full bg-white hover:bg-gray-50 text-primary border border-border py-4 rounded-full flex items-center justify-center gap-2 transition-all font-bold text-[15px] shadow-sm"
-                                >
-                                  <Download className="w-5 h-5" /> Download iOS IPA
-                                </a>
-                               )}
+                            <div className="flex gap-4 items-start">
+                              <div className="w-8 h-8 rounded-lg border border-neon-cyan/30 flex items-center justify-center shrink-0">
+                                <Layers className="w-4 h-4 text-neon-cyan" />
+                              </div>
+                              <div className="flex-1">
+                                <h4 className="text-sm font-mono font-bold text-neon-cyan">2. NATIVE WRAPPING</h4>
+                                <p className="text-xs font-mono text-gray-400 mt-1">We generate native Android and iOS configurations optimized for your website.</p>
+                              </div>
+                            </div>
 
-                               <button 
-                                 onClick={() => {
-                                   setIsDone(false);
-                                   setBuildStatus(null);
-                                   setRequestId(null);
-                                   setAppName('');
-                                   setWebsiteUrl('');
-                                 }}
-                                 className="mt-4 text-xs font-bold text-gray-400 hover:text-primary transition-colors text-center w-full uppercase tracking-wider"
-                               >
-                                 Start New Wrap
-                               </button>
-                            </motion.div>
-                         )}
-                      </motion.div>
+                            <div className="flex gap-4 items-start">
+                              <div className="w-8 h-8 rounded-lg border border-neon-cyan/30 flex items-center justify-center shrink-0">
+                                <Cpu className="w-4 h-4 text-neon-cyan" />
+                              </div>
+                              <div className="flex-1">
+                                <h4 className="text-sm font-mono font-bold text-neon-cyan">3. CLOUD COMPILATION</h4>
+                                <p className="text-xs font-mono text-gray-400 mt-1">Our cloud runners sign, compile, and prepare both APK and IPA packages.</p>
+                              </div>
+                            </div>
+                          </div>
+
+                          <div className="mt-6 p-4 border border-neon-cyan/20 rounded-lg text-center bg-neon-cyan/5">
+                            <CheckCircle2 className="w-5 h-5 text-neon-green mx-auto mb-2" />
+                            <p className="text-xs font-mono text-gray-400">UNLIMITED ACCESS • NO RESTRICTIONS • FREE TIER ACTIVE</p>
+                          </div>
+
+                          <div className="mt-6 text-center">
+                            <div className="text-[10px] font-mono text-gray-600 mb-1">POWERED BY</div>
+                            <div className="text-sm font-mono font-bold text-neon-cyan">JNATIVE ENGINE v2.0</div>
+                          </div>
+                        </div>
+                      </>
                     )}
-                  </AnimatePresence>
-                </div>
-              </div>
 
-              {/* Documentation Section */}
-              <div className="bg-surface rounded-3xl p-6 md:p-8 shadow-[0_4px_24px_rgba(0,0,0,0.02)] border border-border mt-4">
-                
-                <h3 className="text-xl font-bold mb-8 flex items-center justify-center gap-2">
-                  <LayoutTemplate className="w-5 h-5 text-[#FF895D]" /> Documentation
-                </h3>
-                
-                <div className="flex flex-col gap-6">
-                  <div className="flex gap-5 items-start">
-                    <div className="w-8 h-8 rounded-full bg-white border border-border flex items-center justify-center shrink-0 shadow-sm mt-0.5">
-                      <Code className="w-4 h-4 text-primary" />
-                    </div>
-                    <div className="flex-1">
-                      <h4 className="text-[15px] font-bold">1. Input Details</h4>
-                      <p className="text-xs text-gray-500 mt-1 font-medium leading-relaxed">Enter your app name which will appear on devices. Supply a valid URL. Required to be mobile-friendly for best experience.</p>
-                    </div>
-                    <div className="hidden sm:flex items-center h-8">
-                       <CheckCircle2 className="w-5 h-5 text-[#FF895D]" />
-                    </div>
-                  </div>
+                    {activeView === 'monitor' && (
+                      <div className="bg-black/60 backdrop-blur-sm border border-neon-cyan/30 rounded-lg p-6">
+                        <div className="flex items-center gap-2 mb-6">
+                          <Activity className="w-5 h-5 text-neon-cyan" />
+                          <h2 className="text-xl font-mono font-bold text-neon-cyan">SYSTEM MONITOR</h2>
+                        </div>
+                        
+                        <div className="grid grid-cols-3 gap-4 mb-6">
+                          <div className="border border-neon-cyan/20 rounded-lg p-4">
+                            <div className="text-xs text-gray-500 mb-1">BUILD QUEUE</div>
+                            <div className="text-2xl font-mono text-neon-green">0</div>
+                          </div>
+                          <div className="border border-neon-cyan/20 rounded-lg p-4">
+                            <div className="text-xs text-gray-500 mb-1">ACTIVE BUILDS</div>
+                            <div className="text-2xl font-mono text-neon-cyan">0</div>
+                          </div>
+                          <div className="border border-neon-cyan/20 rounded-lg p-4">
+                            <div className="text-xs text-gray-500 mb-1">COMPLETED</div>
+                            <div className="text-2xl font-mono text-neon-green">{history.length}</div>
+                          </div>
+                        </div>
+                        
+                        <div className="border border-neon-cyan/20 rounded-lg p-4">
+                          <div className="text-xs text-gray-500 mb-2">API STATUS</div>
+                          <div className="flex items-center gap-2">
+                            <div className="w-2 h-2 rounded-full bg-neon-green animate-pulse"></div>
+                            <span className="text-xs font-mono text-neon-green">CONNECTED</span>
+                            <span className="text-xs font-mono text-gray-500 ml-auto">LATENCY: 45ms</span>
+                          </div>
+                        </div>
+                      </div>
+                    )}
 
-                  <div className="h-px bg-border w-full pl-13 ml-12" />
+                    {activeView === 'logs' && (
+                      <div className="bg-black/60 backdrop-blur-sm border border-neon-cyan/30 rounded-lg p-6">
+                        <div className="flex items-center gap-2 mb-6">
+                          <Terminal className="w-5 h-5 text-neon-cyan" />
+                          <h2 className="text-xl font-mono font-bold text-neon-cyan">ACTIVITY LOGS</h2>
+                        </div>
+                        
+                        <div className="h-96 bg-black/80 border border-neon-cyan/20 rounded-lg p-4 font-mono text-xs space-y-1 overflow-y-auto">
+                          <div className="text-neon-green">[SYSTEM] &gt; Web2Native interface initialized</div>
+                          <div className="text-gray-400">[API] &gt; Gateway connection established</div>
+                          <div className="text-neon-cyan">[BUILDER] &gt; Ready to accept build requests</div>
+                          <div className="text-gray-400">[STORAGE] &gt; History cache loaded</div>
+                          <div className="text-neon-green">[STATUS] &gt; All systems operational</div>
+                          <div className="animate-pulse text-neon-cyan mt-2">[WAITING] &gt; _</div>
+                        </div>
+                      </div>
+                    )}
 
-                  <div className="flex gap-5 items-start">
-                    <div className="w-8 h-8 rounded-full bg-white border border-border flex items-center justify-center shrink-0 shadow-sm mt-0.5">
-                       <Layers className="w-4 h-4 text-primary" />
-                    </div>
-                    <div className="flex-1">
-                      <h4 className="text-[15px] font-bold">2. Native Wrapping</h4>
-                      <p className="text-xs text-gray-500 mt-1 font-medium leading-relaxed">We will generate native Android and iOS configurations. A WebToNative module proxies interactions for seamless behavior.</p>
-                    </div>
-                    <div className="hidden sm:flex items-center h-8">
-                       <CheckCircle2 className="w-5 h-5 text-[#FF895D]" />
-                    </div>
-                  </div>
-
-                  <div className="h-px bg-border w-full pl-13 ml-12" />
-
-                  <div className="flex gap-5 items-start">
-                    <div className="w-8 h-8 rounded-full bg-white border border-border flex items-center justify-center shrink-0 shadow-sm mt-0.5">
-                      <Cpu className="w-4 h-4 text-primary" />
-                    </div>
-                    <div className="flex-1">
-                      <h4 className="text-[15px] font-bold">3. Compilation</h4>
-                      <p className="text-xs text-gray-500 mt-1 font-medium leading-relaxed">Cloud runners sign, compile, and prepare both an APK and IPA package containing your optimized wrapper securely.</p>
-                    </div>
-                    <div className="hidden sm:flex items-center h-8">
-                       <CheckCircle2 className="w-5 h-5 text-[#FF895D]" />
-                    </div>
-                  </div>
-                </div>
-
-                <div className="mt-8 text-center p-4 bg-gradient-to-r from-[#FF895D]/10 to-[#FF895D]/5 rounded-2xl border border-[#FF895D]/20">
-                  <div className="flex items-center justify-center gap-2 mb-2">
-                    <CheckCircle2 className="w-5 h-5 text-[#FF895D]" />
-                    <span className="text-sm font-bold text-primary">Unlimited Access</span>
-                  </div>
-                  <p className="text-xs text-gray-600 font-medium">
-                    Penggunaan fitur tidak dibatasi. Anda dapat menggunakan layanan ini kapan saja tanpa batasan waktu.
-                  </p>
-                </div>
-
-                <div className="mt-8 text-center flex flex-col items-center">
-                   <div className="flex items-center justify-center gap-1.5 text-xs font-bold text-gray-400 mb-2">
-                     Developer Credit
-                   </div>
-                   <div className="text-sm font-black text-primary tracking-tight">JHON FORUM</div>
-                </div>
-              </div>
-
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </main>
-    </div>
+                    {activeView === 'system' && (
+                      <div className="bg-black/60 backdrop-blur-sm border border-neon-cyan/30 rounded-lg p-6">
+                        <div className="flex items-center gap-2 mb-6">
+                          <Shield className="w-5 h-5 text-neon-cyan" />
+                          <h2 className="text-xl font-mono font-bold text-neon-cyan">SYSTEM CONFIGURATION</h2>
+                        </div>
+                        
+                        <div className="grid grid-cols-2 gap-4">
+                          <div className="border border-neon-cyan/20 rounded-lg p-4">
+                            <div className="text-xs text-gray-500 mb-2">WEB2NATIVE CORE</div>
+                            <div className="text-sm font-mono text-neon-cyan">v2.0.0</div>
+                          </div>
+                          <div className="border border-neon-cyan/20 rounded-lg p-4">
+                            <div className="text-xs text-gray-500 mb-2">API VERSION</div>
+                            <div className="text-sm font-mono text-neon-cyan">v1.0.0</div>
+                          </div>
+                          <div className="border border-neon-cyan/20 rounded-lg p-4">
+                            <div className="text-xs text-gray-500 mb-2">ENVIRONMENT</div>
+                            <div className="text-sm font-mono text-neon-green">PRODUCTION</div>
+                          </div>
+                          <div className="border border-neon-cyan/20 rounded-lg p-4">
+                            <div className="text-xs text-gray-500 mb-2">STATUS</div>
+                            <div className="text-sm font-mono text-neon-green">OPERATIONAL</div>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+          </main>
+        </div>
+      </motion.div>
+    </>
   );
 }
