@@ -81,10 +81,8 @@ export default function Home() {
     setIsDone(false);
     setRequestId(null);
     
-    // Show loading overlay with delay
-    setTimeout(() => {
-      setShowLoadingOverlay(true);
-    }, 200);
+    // Tampilkan loading overlay
+    setShowLoadingOverlay(true);
     
     try {
       const response = await fetch('/api/build', {
@@ -114,7 +112,7 @@ export default function Home() {
       };
       saveHistory([newItem, ...history]);
       
-      // Hide loading overlay after 6 seconds (simulasi loading)
+      // Sembunyikan loading overlay setelah 6 detik
       setTimeout(() => {
         setShowLoadingOverlay(false);
       }, 6000);
@@ -174,49 +172,15 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-background text-foreground font-sans p-4 md:p-8 flex flex-col items-center relative">
       
-      {/* Loading Overlay */}
-      <AnimatePresence>
-        {showLoadingOverlay && (
-          <motion.div 
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 flex items-center justify-center bg-black/20 backdrop-blur-sm"
-            style={{
-              position: 'fixed',
-              top: 0,
-              left: 0,
-              right: 0,
-              bottom: 0,
-              display: 'flex',
-              zIndex: 50,
-              background: 'rgba(0,0,0,0.2)'
-            }}
-          >
-            <video 
-              autoPlay 
-              muted 
-              loop 
-              playsInline
-              className="w-[120px] h-[120px] object-cover rounded-xl shadow-[0_0_20px_rgba(0,0,0,0.3)]"
-              style={{
-                position: 'absolute',
-                top: '70%',
-                left: '50%',
-                transform: 'translate(-50%, -50%)',
-                width: '120px',
-                height: '120px',
-                objectFit: 'cover',
-                borderRadius: '12px',
-                boxShadow: '0 0 20px rgba(0,0,0,0.3)'
-              }}
-            >
-              <source src="https://i.imgur.com/NRDIp63.mp4" type="video/mp4" />
-            </video>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
+      {/* LOADING OVERLAY */}
+      {showLoadingOverlay && (
+        <div className="loading-overlay">
+          <video autoPlay muted loop playsInline>
+            <source src="https://i.imgur.com/NRDIp63.mp4" type="video/mp4" />
+          </video>
+        </div>
+      )}
+      
       <header className="w-full max-w-xl mx-auto flex justify-between items-center mb-12 mt-4 px-2">
         <div 
           className="flex items-center gap-3 cursor-pointer group" 
@@ -387,7 +351,7 @@ export default function Home() {
                   )}
 
                   <AnimatePresence>
-                    {(requestId || isLoading || isDone) && !showLoadingOverlay && (
+                    {(requestId || isLoading || isDone) && (
                       <motion.div 
                         initial={{ opacity: 0, height: 0 }}
                         animate={{ opacity: 1, height: 'auto' }}
@@ -460,7 +424,6 @@ export default function Home() {
                                    setRequestId(null);
                                    setAppName('');
                                    setWebsiteUrl('');
-                                   setShowLoadingOverlay(false);
                                  }}
                                  className="mt-4 text-xs font-bold text-gray-400 hover:text-primary transition-colors text-center w-full uppercase tracking-wider"
                                >
@@ -548,6 +511,54 @@ export default function Home() {
           )}
         </AnimatePresence>
       </main>
+
+      <style jsx>{`
+        .loading-overlay {
+          position: fixed;
+          inset: 0;
+          display: flex;
+          z-index: 9999;
+          background: rgba(0, 0, 0, 0.85);
+          backdrop-filter: blur(8px);
+          align-items: center;
+          justify-content: center;
+        }
+        
+        .loading-overlay video {
+          position: absolute;
+          top: 70%;
+          left: 50%;
+          transform: translate(-50%, -50%);
+          width: 120px;
+          height: 120px;
+          object-fit: cover;
+          border-radius: 12px;
+          box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+        }
+        
+        @keyframes pulse {
+          0%, 100% {
+            opacity: 1;
+          }
+          50% {
+            opacity: 0.5;
+          }
+        }
+        
+        .loading-overlay::before {
+          content: "Processing your app...";
+          position: absolute;
+          bottom: 25%;
+          left: 50%;
+          transform: translateX(-50%);
+          color: white;
+          font-size: 14px;
+          font-weight: 500;
+          letter-spacing: 0.5px;
+          animation: pulse 1.5s ease-in-out infinite;
+          white-space: nowrap;
+        }
+      `}</style>
     </div>
   );
 }
