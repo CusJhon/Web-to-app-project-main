@@ -22,10 +22,45 @@ export default function Home() {
   const [requestId, setRequestId] = useState<string | null>(null);
   const [buildStatus, setBuildStatus] = useState<any>(null);
   const [isDone, setIsDone] = useState(false);
+  const [showSplash, setShowSplash] = useState(true);
+  const [currentTime, setCurrentTime] = useState('00:00:00');
   
   // History state
   const [history, setHistory] = useState<HistoryItem[]>([]);
   const [showHistory, setShowHistory] = useState(false);
+
+  // Splash screen timer and clock
+  useEffect(() => {
+    // Start clock counter
+    let startTime = Date.now();
+    let interval: NodeJS.Timeout;
+    
+    if (showSplash) {
+      interval = setInterval(() => {
+        const elapsed = Date.now() - startTime;
+        const seconds = Math.floor((elapsed / 1000) % 60);
+        const minutes = Math.floor((elapsed / (1000 * 60)) % 60);
+        const hours = Math.floor(elapsed / (1000 * 60 * 60));
+        
+        const formatted = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+        setCurrentTime(formatted);
+      }, 1000);
+      
+      // Hide splash screen after 6 seconds
+      const timer = setTimeout(() => {
+        setShowSplash(false);
+      }, 6000);
+      
+      return () => {
+        clearInterval(interval);
+        clearTimeout(timer);
+      };
+    }
+    
+    return () => {
+      if (interval) clearInterval(interval);
+    };
+  }, [showSplash]);
 
   useEffect(() => {
     // Load history from local storage
@@ -155,6 +190,104 @@ export default function Home() {
       if (interval) clearInterval(interval);
     };
   }, [requestId, isDone]);
+
+  // Splash Screen Component
+  if (showSplash) {
+    return (
+      <div 
+        className="fixed inset-0 z-50 flex items-center justify-center bg-gradient-to-br from-[#1a1a2e] via-[#16213e] to-[#0f3460]"
+        style={{
+          animation: 'fadeOut 0.5s ease-in-out 5.5s forwards'
+        }}
+      >
+        <style jsx>{`
+          @keyframes fadeOut {
+            from {
+              opacity: 1;
+            }
+            to {
+              opacity: 0;
+              visibility: hidden;
+            }
+          }
+          
+          @keyframes spin {
+            0% {
+              transform: rotate(0deg);
+            }
+            100% {
+              transform: rotate(360deg);
+            }
+          }
+          
+          @keyframes pulse {
+            0%, 100% {
+              opacity: 1;
+            }
+            50% {
+              opacity: 0.5;
+            }
+          }
+          
+          @keyframes slideUp {
+            from {
+              transform: translateY(20px);
+              opacity: 0;
+            }
+            to {
+              transform: translateY(0);
+              opacity: 1;
+            }
+          }
+        `}</style>
+        
+        <div className="loading-animation flex flex-col items-center justify-center gap-6">
+          <div className="relative w-32 h-32">
+            <video 
+              autoPlay 
+              muted 
+              loop 
+              playsInline
+              className="w-full h-full object-cover rounded-full"
+              style={{
+                animation: 'pulse 2s ease-in-out infinite'
+              }}
+            >
+              <source src="https://i.imgur.com/NRDIp63.mp4" type="video/mp4" />
+            </video>
+            <div 
+              className="absolute inset-0 rounded-full border-4 border-transparent border-t-[#FF895D] border-r-[#FF895D]"
+              style={{
+                animation: 'spin 2s linear infinite'
+              }}
+            />
+          </div>
+          
+          <div className="loading-text text-white text-xl font-bold tracking-wider flex gap-1">
+            {'LOADING SYSTEM'.split('').map((char, index) => (
+              <span
+                key={index}
+                style={{
+                  animation: `pulse 1.5s ease-in-out infinite ${index * 0.1}s`,
+                  display: 'inline-block'
+                }}
+              >
+                {char}
+              </span>
+            ))}
+          </div>
+          
+          <div className="splash-clock text-[#FF895D] text-2xl font-mono font-bold tracking-widest">
+            {currentTime}
+          </div>
+          
+          <div className="text-white/40 text-xs mt-4 animate-pulse">
+            Initializing JhonNative Pro...
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   // View renderer
   return (
