@@ -26,9 +26,6 @@ export default function Home() {
   // History state
   const [history, setHistory] = useState<HistoryItem[]>([]);
   const [showHistory, setShowHistory] = useState(false);
-  
-  // Loading overlay state
-  const [showLoadingOverlay, setShowLoadingOverlay] = useState(false);
 
   useEffect(() => {
     // Load history from local storage
@@ -81,9 +78,6 @@ export default function Home() {
     setIsDone(false);
     setRequestId(null);
     
-    // Tampilkan loading overlay
-    setShowLoadingOverlay(true);
-    
     try {
       const response = await fetch('/api/build', {
         method: 'POST',
@@ -112,15 +106,9 @@ export default function Home() {
       };
       saveHistory([newItem, ...history]);
       
-      // Sembunyikan loading overlay setelah 6 detik
-      setTimeout(() => {
-        setShowLoadingOverlay(false);
-      }, 6000);
-      
     } catch (err: any) {
       setError(err.message || 'System error occurred.');
       setIsLoading(false);
-      setShowLoadingOverlay(false);
     }
   };
 
@@ -170,16 +158,7 @@ export default function Home() {
 
   // View renderer
   return (
-    <div className="min-h-screen bg-background text-foreground font-sans p-4 md:p-8 flex flex-col items-center relative">
-      
-      {/* LOADING OVERLAY */}
-      {showLoadingOverlay && (
-        <div className="loading-overlay">
-          <video autoPlay muted loop playsInline>
-            <source src="https://i.imgur.com/NRDIp63.mp4" type="video/mp4" />
-          </video>
-        </div>
-      )}
+    <div className="min-h-screen bg-background text-foreground font-sans p-4 md:p-8 flex flex-col items-center">
       
       <header className="w-full max-w-xl mx-auto flex justify-between items-center mb-12 mt-4 px-2">
         <div 
@@ -511,54 +490,6 @@ export default function Home() {
           )}
         </AnimatePresence>
       </main>
-
-      <style jsx>{`
-        .loading-overlay {
-          position: fixed;
-          inset: 0;
-          display: flex;
-          z-index: 9999;
-          background: rgba(0, 0, 0, 0.85);
-          backdrop-filter: blur(8px);
-          align-items: center;
-          justify-content: center;
-        }
-        
-        .loading-overlay video {
-          position: absolute;
-          top: 70%;
-          left: 50%;
-          transform: translate(-50%, -50%);
-          width: 120px;
-          height: 120px;
-          object-fit: cover;
-          border-radius: 12px;
-          box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
-        }
-        
-        @keyframes pulse {
-          0%, 100% {
-            opacity: 1;
-          }
-          50% {
-            opacity: 0.5;
-          }
-        }
-        
-        .loading-overlay::before {
-          content: "Processing your app...";
-          position: absolute;
-          bottom: 25%;
-          left: 50%;
-          transform: translateX(-50%);
-          color: white;
-          font-size: 14px;
-          font-weight: 500;
-          letter-spacing: 0.5px;
-          animation: pulse 1.5s ease-in-out infinite;
-          white-space: nowrap;
-        }
-      `}</style>
     </div>
   );
 }
